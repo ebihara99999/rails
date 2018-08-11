@@ -38,8 +38,13 @@ module Rails
 
       private
         def ensure_master_key_has_been_added
-          master_key_generator.add_master_key_file
-          master_key_generator.ignore_master_key_file
+          if !Rails.application.credentials.content_path.exist?
+            master_key_generator.add_master_key_file
+            master_key_generator.ignore_master_key_file
+          else
+            say missing_credentials_message
+            exit 1
+          end
         end
 
         def ensure_credentials_have_been_added
@@ -51,7 +56,6 @@ module Rails
             system("#{ENV["EDITOR"]} #{tmp_path}")
           end
         end
-
 
         def master_key_generator
           require "rails/generators"
@@ -69,9 +73,9 @@ module Rails
 
         def missing_credentials_message
           if Rails.application.credentials.key.nil?
-            "Missing master key to decrypt credentials. See bin/rails credentials:help"
+            "Missing master key to decrypt credentials. See `rails credentials:help`"
           else
-            "No credentials have been added yet. Use bin/rails credentials:edit to change that."
+            "No credentials have been added yet. Use `rails credentials:edit` to change that."
           end
         end
     end
